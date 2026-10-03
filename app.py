@@ -21,7 +21,6 @@ if uploaded_file is not None:
     try:
         df_user = pd.read_csv(uploaded_file)
         st.sidebar.success("¡CSV cargado correctamente!")
-        # Extrae los últimos valores si las columnas existen
         if 'tasa' in df_user.columns: tasa_default = float(df_user['tasa'].iloc[-1])
         if 'ise' in df_user.columns: ise_default = float(df_user['ise'].iloc[-1])
         if 'ipc' in df_user.columns: ipc_default = float(df_user['ipc'].iloc[-1])
@@ -40,7 +39,6 @@ trm_input = st.sidebar.number_input("TRM Observada ($)", min_value=3000.0, max_v
 if st.sidebar.button("Ejecutar Sismógrafo 3D", type="primary"):
     st.subheader("1. Diagnóstico Estructural del Estado Actual (4 Variables)")
     
-    # Factor de impacto de la TRM en la ecuación del modelo
     trm_factor = trm_input / 4100.0
     
     ipc_eq = (112.4512 
@@ -61,7 +59,7 @@ if st.sidebar.button("Ejecutar Sismógrafo 3D", type="primary"):
 
     # Visualización 3D mejorada para móviles
     st.subheader("2. Sábana Macroeconómica 3D")
-    st.markdown("Ejes: **X** = Tasa BanRep | **Y** = ISE | **Z** = IPC | **Color** = Intensidad de la TRM.")
+    st.markdown("Ejes: **X** = Tasa BanRep | **Y** = ISE | **Z** = IPC | **Color** = Dinámica cruzada ajustada por TRM.")
 
     tasa_grid = np.linspace(2, 16, 30)
     ise_grid = np.linspace(100, 160, 30)
@@ -75,8 +73,8 @@ if st.sidebar.button("Ejecutar Sismógrafo 3D", type="primary"):
                 + 0.0018 * (ISE**2) 
                 - 0.0084 * TASA * ISE)
 
-    # Mapa de color basado en la TRM (incorporando la 4ta dimensión)
-    TRM_COLOR = np.full_like(IPC_SURF, trm_input)
+    # Matriz de color variada en la cuadrícula y escalada por el nivel de la TRM
+    TRM_COLOR = (TASA * 0.5 + ISE * 0.5) * (trm_input / 4100.0)
 
     fig = go.Figure(data=[
         go.Surface(
@@ -85,7 +83,7 @@ if st.sidebar.button("Ejecutar Sismógrafo 3D", type="primary"):
             y=ISE, 
             surfacecolor=TRM_COLOR,
             colorscale='Viridis',
-            colorbar=dict(title="TRM ($)")
+            colorbar=dict(title="Intensidad TRM")
         )
     ])
 
